@@ -103,14 +103,7 @@
     Async.match(state.get('loadState'), {
       Pending: () => d('p', {}, [t('Loading photos...')]),
       Errored: () => d('p', {}, [t('Error loading photos >:')]),
-      Done: () => d('div', { attrs: { style: {
-        backgroundColor: '#000',
-        height: '100%',
-        position: 'relative',
-        width: '100%',
-      } }, events: {
-        click: () => dispatch(Actions.StartAutoplay()),
-      } }, [
+      Done: () => d('div', {}, [
         d('div', { attrs: { style: o.merge(imStyle, {  // preloader
           backgroundImage: `url(${state.getIn(['photos', getNext(state)])})`,
           opacity: `${Math.max(0, state.get('trans') - (1 / 3)) * (3 / 2)}`,

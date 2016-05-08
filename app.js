@@ -15,6 +15,14 @@
     photosState: null,
   });
 
+  const centre = stuff => d('div', { attrs: { style: {
+    alignItems: 'center',
+    display: 'flex',
+    height: '100%',
+    justifyContent: 'center',
+    width: '100%',
+  } } }, [].concat(stuff));
+
   const App = {
     init: () => ({
       effects: [],
@@ -53,19 +61,19 @@
     }),
 
     View: (state, dispatch) =>
-      Async.match(state.get('user'), {
+      centre(Async.match(state.get('user'), {
         Pending: () =>
-          d('p', {}, [t('checking login…')]),
+          d('p', {}, [t('logging in…')]),
         Errored: () =>
           d('p', {}, [
             d('button', { events: {
               click: () => dispatch(Actions.StartLogin()),
-            } }, [t('log in')]),
+            } }, [t('start')]),
           ]),
         Done: () =>
           components.photos.View(state.get('photosState'),
             payload => dispatch(Actions.PhotosAction(payload))),
-      }),
+      })),
   };
 
   render(App, document.getElementById('app'));
