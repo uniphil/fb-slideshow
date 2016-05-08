@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>FB Slideshow</title>
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/lib/reset.css" />
+  </head>
+
+  <body>
+    <script>
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId      : '1014653891946938',
+          version    : 'v2.6',
+          xfbml      : true,
+        });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "//connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+    </script>
+
+    <div id="app"></div>
+
+    <script src="/lib/immutable.js"></script>
+    <script src="/lib/results.js"></script>
+    <script src="/lib/xxs.js"></script>
+
+    <script src="/fb.js"></script>
+    <script src="/photos.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
