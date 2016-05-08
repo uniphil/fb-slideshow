@@ -3,8 +3,13 @@
   const SHOWTIME = 4000;
   const TRANSTIME = 1000;
 
+  const SPACE = 32;
+  const LEFT = 37;
+  const RIGHT = 39;
+
   const Actions = Union({
     LoadPhotos: null,
+    KeyDown: null,
     StartAutoplay: null,
     Tick: null,
   });
@@ -27,6 +32,16 @@
     }
   };
 
+  const getPrev = state => {
+    const current = state.get('selected');
+    const total = state.get('photos').size;
+    if (total > 0) {
+      return (current + total - 1) % total;
+    } else {
+      return current;
+    }
+  };
+
   const init = () => ({
     state: State(),
     effects: [{
@@ -35,6 +50,9 @@
         limit: 200,
       })),
       wrap: Actions.LoadPhotos,
+    }, {
+      effect: Effect.Listen('keydown'),
+      wrap: Actions.KeyDown,
     }],
   });
 
@@ -56,6 +74,18 @@
               photo.images[0].source))),
       }),
     }),
+    KeyDown: e => {
+      let nextState = state;
+      if (e.keyCode === LEFT) {
+        nextState = state.set('selected', getPrev(state));
+      } else if (e.keyCode === RIGHT) {
+        nextState = state.set('selected', getNext(state));
+      }
+      return {
+        effects: [],
+        state: nextState.update('t0', t0 => t0 + (SHOWTIME * 2 / 3)),
+      };
+    },
     StartAutoplay: t0 => ({
       effects: [{
         effect: Effect.Tick(),
