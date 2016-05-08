@@ -14,7 +14,7 @@
   const promiseFacebookLogin = scope => new Promise((resolve, reject) =>
     FB.login(response => {
       if (response.status === 'connected') {
-        return resolve(response.authResponse);
+        return setTimeout(() => resolve(response.authResponse), 500);
       } else {
         return reject(new Error('did not log in >:'));
       }
