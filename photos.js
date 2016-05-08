@@ -14,9 +14,17 @@
     Tick: null,
   });
 
+  const Commands = Union({
+    Back: null,
+    Forward: null,
+    TogglePlayPause: null,
+  });
+
   const State = Immutable.Record({
     loadState: Async.Pending(),
     photos: Immutable.List(),
+    playing: false,
+    commands: Immutable.List(),
     selected: 0,
     trans: 0,
     t0: 0,
@@ -69,48 +77,92 @@
         effects: [],
         state: state
           .set('loadState', Async.Done())
+          .set('playing', true)
           .update('photos', photos =>
             photos.concat(data.data.map(photo =>
               photo.images[0].source))),
       }),
     }),
+
     KeyDown: e => {
-      let nextState = state;
+      let nextState = state,
+          command;
       if (e.keyCode === LEFT) {
-        nextState = state.set('selected', getPrev(state));
+        command = Commands.Back();
       } else if (e.keyCode === RIGHT) {
-        nextState = state.set('selected', getNext(state));
+        command = Commands.Forward();
+      } else if (e.keyCode === SPACE) {
+        command = Commands.TogglePlayPause();
       }
-      return {
-        effects: [],
-        state: nextState.update('t0', t0 => t0 + (SHOWTIME * 2 / 3)),
-      };
-    },
-    StartAutoplay: t0 => ({
-      effects: [{
-        effect: Effect.Tick(),
-        wrap: Actions.Tick,
-      }],
-      state: state.set('t0', t0),
-    }),
-    Tick: t => {
-      const dt = t - state.get('t0');
-      let nextState = state;
-      if (SHOWTIME <= dt && dt < (SHOWTIME + TRANSTIME)) {
-        nextState = state
-          .set('trans', (dt - SHOWTIME) / TRANSTIME);
-      } else if (dt >= (SHOWTIME + TRANSTIME)) {
-        nextState = state.merge({
-          selected: getNext(state),
-          trans: 0,
-          t0: t,
-        });
+      if (command) {
+        nextState = nextState.update('commands', c => c.push(command));
       }
       return {
         effects: [{
           effect: Effect.Tick(),
           wrap: Actions.Tick,
         }],
+        state: nextState,
+      };
+    },
+
+    StartAutoplay: t0 => ({
+      effects: [{
+        effect: Effect.Tick(),
+        wrap: Actions.Tick,
+      }],
+      state: state.merge({
+        t0: t0,
+        playing: true,
+      }),
+    }),
+
+    Tick: t => {
+      let nextState = state;
+
+      nextState.get('commands').forEach(command =>
+        nextState = Commands.match(command, {
+          Back: () =>
+            nextState.merge({
+              selected: getPrev(nextState),
+              trans: 0,
+              t0: t,
+            }),
+          Forward: () =>
+            nextState.merge({
+              selected: getNext(nextState),
+              trans: 0,
+              t0: t,
+            }),
+          TogglePlayPause: () =>
+            nextState.merge({
+              playing: !nextState.get('playing'),
+              t0: t - SHOWTIME,  // transition to the next thing
+            }),
+        }));
+      nextState = nextState.set('commands', Immutable.List());
+
+      if (nextState.get('playing')) {
+        const dt = t - nextState.get('t0');
+        if (SHOWTIME <= dt && dt < (SHOWTIME + TRANSTIME)) {
+          nextState = nextState
+            .set('trans', (dt - SHOWTIME) / TRANSTIME);
+        } else if (dt >= (SHOWTIME + TRANSTIME)) {
+          nextState = nextState.merge({
+            selected: getNext(nextState),
+            trans: 0,
+            t0: t,
+          });
+        }
+      }
+
+      return {
+        effects: nextState.get('playing')
+          ? [{
+            effect: Effect.Tick(),
+            wrap: Actions.Tick,
+          }]
+          : [],
         state: nextState,
       };
     },
