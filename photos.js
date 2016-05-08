@@ -1,4 +1,4 @@
-((c, Immutable, Union, Async, fb, d, t) => {
+((c, Immutable, Union, Async, Effect, fb, d, t) => {
 
   const Actions = Union({
     LoadPhotos: null,
@@ -15,10 +15,10 @@
       photos: Async.Pending(),
     }),
     effects: [{
-      start: () => fb.fbP('/10153487730616316/photos', {
+      effect: Effect.Task(() => fb.fbP('/10153487730616316/photos', {
         fields: [ 'images' ],
         limit: 200,
-      }),
+      })),
       wrap: Actions.LoadPhotos,
     }],
   });
@@ -65,6 +65,7 @@
 ,  window.Immutable
 ,  window.Union
 ,  window.Async
+,  window.Effect
 ,  window.fb
 ,  window.d
 ,  window.t

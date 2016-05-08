@@ -1,6 +1,6 @@
 'use strict';
 
-((module, Immutable, Async, fb, components, d, t) => {
+((module, Immutable, Async, Effect, fb, components, u, d, t) => {
 
   const ALBUM_ID = '10153487730616316';
 
@@ -30,10 +30,7 @@
           Done: user => {
             const photosInit = components.photos.init();
             return {
-              effects: photosInit.effects.map(effect => ({
-                start: effect.start,
-                wrap: payload => Actions.PhotosAction(effect.wrap(payload)),
-              })),
+              effects: u.wrap(photosInit.effects, Actions.PhotosAction),
               state: state.merge({
                 user: result,
                 photosState: photosInit.state,
@@ -48,20 +45,11 @@
       StartLogin: () => ({
         state,
         effects: [{
-          start: () => fb.promiseFacebookLogin(['user_photos']),
+          effect: Effect.Task(() => fb.promiseFacebookLogin(['user_photos'])),
           wrap: Actions.Login,
         }],
       }),
-      PhotosAction: action => {
-        const updated = components.photos.update(state.get('photosState'), action);
-        return {
-          effects: updated.effects.map(effect => ({
-            start: effect.start,
-            wrap: payload => Actions.PhotosAction(effect.wrap(payload)),
-          })),
-          state: state.set('photosState', updated.state),
-        };
-      },
+      PhotosAction: u.forward(state, 'photosState', Actions.PhotosAction, components.photos.update),
     }),
 
     View: (state, dispatch) =>
@@ -84,8 +72,10 @@
 })({}
 , window.Immutable
 , window.Async
+, window.Effect
 , window.fb
 , window.components
+, window.u
 , window.d
 , window.t
 );
